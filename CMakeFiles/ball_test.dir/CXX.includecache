@@ -1,0 +1,14 @@
+#IncludeRegexLine: ^[ 	]*#[ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/home/prasanna/opencv_workspace/pingpong_tracker/ball_test.cpp
+stdio.h
+-
+opencv2/opencv.hpp
+-
+

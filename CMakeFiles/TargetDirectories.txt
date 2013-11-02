@@ -1,0 +1,2 @@
+/home/prasanna/opencv_workspace/pingpong_tracker/CMakeFiles/ball_test.dir
+/home/prasanna/opencv_workspace/pingpong_tracker/CMakeFiles/test_cv.dir

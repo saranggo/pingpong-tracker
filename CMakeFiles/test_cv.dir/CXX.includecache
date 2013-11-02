@@ -1,0 +1,22 @@
+#IncludeRegexLine: ^[ 	]*#[ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/home/prasanna/opencv_workspace/pingpong_tracker/image_test.cpp
+stdio.h
+-
+opencv2/opencv.hpp
+-
+vector
+-
+algorithm
+-
+stdlib.h
+-
+string
+-
+
