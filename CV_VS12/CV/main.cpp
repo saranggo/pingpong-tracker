@@ -1,35 +1,31 @@
 #include <opencv2/opencv.hpp>
 #include <string>
 #include "ProjectileEst.cpp"
+#include "config.h"
 
 using namespace cv;
 using namespace std;
 
-extern void colorFilter(const Mat &src, Mat &dst, const Scalar &lower, const Scalar &higher,  bool flip);
-extern int detectEllipse(const Mat &src, RotatedRect &target, int grayThresh, int ellipseMinMinorSize, int ellipseMinMajorSize);
-extern int getNextImage(Mat &dst, int numFrame = -1);
+extern void colorFilter(const Mat&, Mat&, const Scalar&, const Scalar&,  bool);
+extern int detectEllipse(const Mat&, RotatedRect&, int, int, int);
+int getNextImage(Mat&, Mat&, int n=-1);
 
 bool pause = true;
 int main( int argc, char** argv )
 {
-	//string original_window = "Original Image";
-	//namedWindow(original_window, CV_WINDOW_AUTOSIZE );
 	string windowResult1 = "Result1";
 	namedWindow(windowResult1, CV_WINDOW_AUTOSIZE );
 	//string windowResult2 = "Result2";
 	//namedWindow(windowResult2, CV_WINDOW_AUTOSIZE );
 
-	Mat src;
-	getNextImage(src, 18);
+	Mat src_bgr, src_dep;
+	getNextImage(src_bgr, src_dep, 18);
 	ProjectileEst esti;
-	while(getNextImage(src))
+	while(getNextImage(src_bgr, src_dep))
 	{
-		/// DEBUG: load source image
-		//imshow(original_window, src);
-
 		/// color filter
 		Mat cFilter;
-		colorFilter(src, cFilter, Scalar(115,120,120), Scalar(125,255,255), false);
+		colorFilter(src_bgr, cFilter, Scalar(115,120,120), Scalar(125,255,255), false);
 
 		/// DEBUG: display color-filtered image
 		//imshow(windowResult1, cFilter);
@@ -55,10 +51,10 @@ int main( int argc, char** argv )
 		Point2f rect_points[4]; 
 		eDetect.points(rect_points);
 		for( int j = 0; j < 4; j++ )
-			line(src, rect_points[j], rect_points[(j + 1) % 4], Scalar(255,0,0), 1, 8);
+			line(src_bgr, rect_points[j], rect_points[(j + 1) % 4], Scalar(255,0,0), 1, 8);
 		if(nextConf == 1)
-			circle(src, Point(nextPos.x, nextPos.y), 2, Scalar(0,0,255), -1, 8);
-		imshow(windowResult1, src);
+			circle(src_bgr, Point(nextPos.x, nextPos.y), 2, Scalar(0,0,255), -1, 8);
+		imshow(windowResult1, src_bgr);
 
 		if(pause)
 			waitKey(0);

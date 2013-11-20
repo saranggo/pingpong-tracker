@@ -8,12 +8,13 @@ filtered image to a matlab variable.
 #include <opencv/cv.h>
 #include <opencv/highgui.h>
 #include <opencv2/opencv.hpp>
+#include "config.h"
 
 using namespace cv;
 using namespace std;
 
 bool debug = false;
-int detectEllipse(const Mat &src, RotatedRect &target, int grayThresh, int ellipseMinMinorSize, int ellipseMinMajorSize) {
+int detectEllipse(const Mat &src, RotatedRect &target_out, int grayThresh, int ellipseMinMinorSize, int ellipseMinMajorSize) {
 
 	Mat src_gray;
 	Mat edges_output;
@@ -61,7 +62,7 @@ int detectEllipse(const Mat &src, RotatedRect &target, int grayThresh, int ellip
 	}
 
 	if(maxSizeIndex != -1) {
-		target = minRect[maxSizeIndex];
+		target_out = minRect[maxSizeIndex];
 
 		if(debug) {
 			/// debug: draw ellipse
