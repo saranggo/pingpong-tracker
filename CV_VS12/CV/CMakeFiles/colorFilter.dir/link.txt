@@ -1,0 +1,2 @@
+/usr/bin/ar cr lib/libcolorFilter.a  CMakeFiles/colorFilter.dir/colorFilter.cpp.o
+/usr/bin/ranlib lib/libcolorFilter.a

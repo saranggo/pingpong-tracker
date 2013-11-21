@@ -1,0 +1,5 @@
+/home/prasanna/opencv_workspace/pingpong-tracker/CV_VS12/CV/CMakeFiles/ProjectileEst.dir
+/home/prasanna/opencv_workspace/pingpong-tracker/CV_VS12/CV/CMakeFiles/colorFilter.dir
+/home/prasanna/opencv_workspace/pingpong-tracker/CV_VS12/CV/CMakeFiles/detectEllipse.dir
+/home/prasanna/opencv_workspace/pingpong-tracker/CV_VS12/CV/CMakeFiles/getNextImage.dir
+/home/prasanna/opencv_workspace/pingpong-tracker/CV_VS12/CV/CMakeFiles/main.dir

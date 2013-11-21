@@ -1,0 +1,2 @@
+/usr/bin/ar cr lib/libProjectileEst.a  CMakeFiles/ProjectileEst.dir/ProjectileEst.cpp.o
+/usr/bin/ranlib lib/libProjectileEst.a

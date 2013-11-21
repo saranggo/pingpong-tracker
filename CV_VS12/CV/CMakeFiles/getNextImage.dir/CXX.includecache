@@ -1,0 +1,18 @@
+#IncludeRegexLine: ^[ 	]*#[ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/home/prasanna/opencv_workspace/pingpong-tracker/CV_VS12/CV/config.h
+
+/home/prasanna/opencv_workspace/pingpong-tracker/CV_VS12/CV/getNextImage.cpp
+opencv2/opencv.hpp
+-
+string
+-
+config.h
+/home/prasanna/opencv_workspace/pingpong-tracker/CV_VS12/CV/config.h
+

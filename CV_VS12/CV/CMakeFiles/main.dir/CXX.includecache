@@ -1,0 +1,30 @@
+#IncludeRegexLine: ^[ 	]*#[ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/home/prasanna/opencv_workspace/pingpong-tracker/CV_VS12/CV/ProjectileEst.cpp
+string
+-
+list
+-
+opencv2/opencv.hpp
+-
+config.h
+/home/prasanna/opencv_workspace/pingpong-tracker/CV_VS12/CV/config.h
+
+/home/prasanna/opencv_workspace/pingpong-tracker/CV_VS12/CV/config.h
+
+/home/prasanna/opencv_workspace/pingpong-tracker/CV_VS12/CV/main.cpp
+opencv2/opencv.hpp
+-
+string
+-
+ProjectileEst.cpp
+/home/prasanna/opencv_workspace/pingpong-tracker/CV_VS12/CV/ProjectileEst.cpp
+config.h
+/home/prasanna/opencv_workspace/pingpong-tracker/CV_VS12/CV/config.h
+

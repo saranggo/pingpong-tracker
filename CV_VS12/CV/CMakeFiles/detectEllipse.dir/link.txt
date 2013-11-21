@@ -1,0 +1,2 @@
+/usr/bin/ar cr lib/libdetectEllipse.a  CMakeFiles/detectEllipse.dir/detectEllipse.cpp.o
+/usr/bin/ranlib lib/libdetectEllipse.a

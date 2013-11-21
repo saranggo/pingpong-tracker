@@ -1,0 +1,20 @@
+#IncludeRegexLine: ^[ 	]*#[ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/home/prasanna/opencv_workspace/pingpong-tracker/CV_VS12/CV/config.h
+
+/home/prasanna/opencv_workspace/pingpong-tracker/CV_VS12/CV/detectEllipse.cpp
+opencv/cv.h
+-
+opencv/highgui.h
+-
+opencv2/opencv.hpp
+-
+config.h
+/home/prasanna/opencv_workspace/pingpong-tracker/CV_VS12/CV/config.h
+
