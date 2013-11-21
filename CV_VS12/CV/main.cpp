@@ -11,12 +11,12 @@ extern void scalarFilter(const Mat&, Mat&, const Scalar&, const Scalar&,  bool);
 extern int detectEllipse(const Mat&, RotatedRect&, int, int, int);
 int getNextImage(Mat&, Mat&, int n=-1);
 
-bool pause1 = false;
+bool pause = true;
 int main( int argc, char** argv )
 {
 	string windowResult1 = "Result1";
-	namedWindow(windowResult1, CV_WINDOW_AUTOSIZE );
-	//string windowResult2 = "Result2";
+	//namedWindow(windowResult1, CV_WINDOW_AUTOSIZE );
+	string windowResult2 = "Result2";
 	//namedWindow(windowResult2, CV_WINDOW_AUTOSIZE );
 
 	Mat src_bgr, src_dep;
@@ -25,15 +25,16 @@ int main( int argc, char** argv )
 	while(getNextImage(src_bgr, src_dep))
 	{
 		/// color filter
-		Mat cFilter;
-		scalarFilter(src_bgr, cFilter, Scalar(115,120,120), Scalar(125,255,255), false);
+		Mat cFilter, src_hsv;
+		cvtColor(src_bgr, src_hsv, CV_RGB2HSV);
+		scalarFilter(src_hsv, cFilter, Scalar(115,120,120), Scalar(125,255,255), false);
 
 		/// depth filter
 		Mat dFilter;
-		scalarFilter(src_dep, dFilter, Scalar(0), Scalar(255), false);
+		scalarFilter(src_dep, dFilter, Scalar(150), Scalar(255), false);
 
-		/// DEBUG: display color-filtered image
-		//imshow(windowResult1, cFilter);
+		// DEBUG: display filtered image
+		imshow(windowResult1, src_dep);
 
 		/// ellipse detection
 		RotatedRect eDetect;
@@ -44,7 +45,7 @@ int main( int argc, char** argv )
 			/// get current position
 			currPos.x = eDetect.center.x;	//TODO: optimize
 			currPos.y = eDetect.center.y;
-			currPos.z = src_dep.at<int>((int)currPos.x, (int)currPos.y);
+			currPos.z = *(src_dep.data + src_dep.step[0]*(int)currPos.x + src_dep.step[1]*(int)currPos.y);
 
 			/// estimate the next point
 			esti.addPoint(currPos);
@@ -62,9 +63,9 @@ int main( int argc, char** argv )
 			line(src_bgr, rect_points[j], rect_points[(j + 1) % 4], Scalar(255,0,0), 1, 8);
 		if(nextConf == 1)
 			circle(src_bgr, Point(nextPos.x, nextPos.y), 2, Scalar(0,0,255), -1, 8);
-		imshow(windowResult1, src_bgr);
+		imshow(windowResult2, src_bgr);
 
-		if(pause1)
+		if(pause)
 			waitKey(0);
 		else
 			waitKey(10);
