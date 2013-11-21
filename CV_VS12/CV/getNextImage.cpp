@@ -26,6 +26,8 @@ int getNextImageTest(Mat &dst_bgr, Mat &dst_dep, int numFrame = -1) {
 
 	dst_bgr = imread(pathBGR, 1);
 	dst_dep = imread(pathDepth, 1);
+	if(dst_dep.channels() != 1)
+		cvtColor(dst_dep, dst_dep, CV_BGR2GRAY);
 	if(!dst_bgr.data || !dst_dep.data)
 		return 0;
 	return 1;
