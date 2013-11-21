@@ -1,12 +1,13 @@
 #include <opencv2/opencv.hpp>
 #include <string>
+#include <cmath>
 #include "ProjectileEst.cpp"
 #include "config.h"
 
 using namespace cv;
 using namespace std;
 
-extern void colorFilter(const Mat&, Mat&, const Scalar&, const Scalar&,  bool);
+extern void scalarFilter(const Mat&, Mat&, const Scalar&, const Scalar&,  bool);
 extern int detectEllipse(const Mat&, RotatedRect&, int, int, int);
 int getNextImage(Mat&, Mat&, int n=-1);
 
@@ -25,7 +26,11 @@ int main( int argc, char** argv )
 	{
 		/// color filter
 		Mat cFilter;
-		colorFilter(src_bgr, cFilter, Scalar(115,120,120), Scalar(125,255,255), false);
+		scalarFilter(src_bgr, cFilter, Scalar(115,120,120), Scalar(125,255,255), false);
+
+		/// depth filter
+		Mat dFilter;
+		scalarFilter(src_dep, dFilter, Scalar(0), Scalar(255), false);
 
 		/// DEBUG: display color-filtered image
 		//imshow(windowResult1, cFilter);
@@ -34,11 +39,12 @@ int main( int argc, char** argv )
 		RotatedRect eDetect;
 		Point3f currPos, nextPos;
 		float nextConf = 0;
+		//TODO: get next estimate with conf. form bb for detection
 		if(detectEllipse(cFilter, eDetect, 150, 7, 7) == 1) {
 			/// get current position
 			currPos.x = eDetect.center.x;	//TODO: optimize
 			currPos.y = eDetect.center.y;
-			currPos.z = 1;
+			currPos.z = src_dep.at<int>((int)currPos.x, (int)currPos.y);
 
 			/// estimate the next point
 			esti.addPoint(currPos);
@@ -46,6 +52,8 @@ int main( int argc, char** argv )
 		}
 		else
 			esti.invalidatePoints();
+
+		//TODO: convert coordinates to real world - using camera matrix
 
 		/// DEBUG: display detected ellipse - rotated rectangle
 		Point2f rect_points[4]; 

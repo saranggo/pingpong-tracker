@@ -26,7 +26,7 @@ int getNextImageTest(Mat &dst_bgr, Mat &dst_dep, int numFrame = -1) {
 
 	dst_bgr = imread(pathBGR, 1);
 	dst_dep = imread(pathDepth, 1);
-	if(!dst_bgr.data)
+	if(!dst_bgr.data || !dst_dep.data)
 		return 0;
 	return 1;
 }
