@@ -6,7 +6,7 @@
 using namespace cv;
 using namespace std;
 
-extern void colorFilter(const Mat&, Mat&, const Scalar&, const Scalar&,  bool);
+extern void scalarFilter(const Mat&, Mat&, const Scalar&, const Scalar&,  bool);
 extern int detectEllipse(const Mat&, RotatedRect&, int, int, int);
 int getNextImage(Mat&, Mat&, int n=-1);
 
@@ -25,7 +25,11 @@ int main( int argc, char** argv )
 	{
 		/// color filter
 		Mat cFilter;
-		colorFilter(src_bgr, cFilter, Scalar(115,120,120), Scalar(125,255,255), false);
+		scalarFilter(src_bgr, cFilter, Scalar(115,120,120), Scalar(125,255,255), false);
+
+		/// depth filter
+		Mat dFilter;
+		scalarFilter(src_dep, dFilter, Scalar(0), Scalar(255), false);
 
 		/// DEBUG: display color-filtered image
 		//imshow(windowResult1, cFilter);
