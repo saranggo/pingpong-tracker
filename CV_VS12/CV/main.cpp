@@ -10,7 +10,7 @@ extern void colorFilter(const Mat&, Mat&, const Scalar&, const Scalar&,  bool);
 extern int detectEllipse(const Mat&, RotatedRect&, int, int, int);
 int getNextImage(Mat&, Mat&, int n=-1);
 
-bool pause = true;
+bool pause = false;
 int main( int argc, char** argv )
 {
 	string windowResult1 = "Result1";
