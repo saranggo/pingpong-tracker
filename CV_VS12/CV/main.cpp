@@ -38,23 +38,31 @@ int main( int argc, char** argv )
 
 		/// ellipse detection
 		RotatedRect eDetect;
-		Point3f currPos, nextPos;
-		float nextConf = 0;
+		Point3f currPos, nextPos, nextPosAll;
+		float nextConf = 0, nextConfAll = 0;
+
+		//TODO: Either store points in world coordinates - estimate position in world and project to camera plane
+		//		OR store points in image coordinates - estimate postition in image plane and project to world
+
 		//TODO: get next estimate with conf. form bb for detection
 		if(detectEllipse(cFilter, eDetect, 150, 7, 7) == 1) {
-			/// get current position
+			/// get current position - acceleration on the Y axis
 			currPos.x = eDetect.center.x;	//TODO: optimize
 			currPos.y = eDetect.center.y;
-			currPos.z = *(src_dep.data + src_dep.step[0]*(int)currPos.x + src_dep.step[1]*(int)currPos.y);
+			currPos.z = src_dep.at<uchar>(eDetect.center.x, eDetect.center.y);
+			//currPos.z = *(src_dep.data + src_dep.step[0]*(int)currPos.x + src_dep.step[1]*(int)currPos.y);
+
+			//TODO: convert coordinates to real world - using camera matrix
 
 			/// estimate the next point
 			esti.addPoint(currPos);
 			nextConf = esti.estimateNext(nextPos);
+			nextConfAll = esti.estimateNextAll(nextPosAll);
+
+			//TODO: convert estimated point to image plane
 		}
 		else
 			esti.invalidatePoints();
-
-		//TODO: convert coordinates to real world - using camera matrix
 
 		/// DEBUG: display detected ellipse - rotated rectangle
 		Point2f rect_points[4]; 
@@ -63,6 +71,8 @@ int main( int argc, char** argv )
 			line(src_bgr, rect_points[j], rect_points[(j + 1) % 4], Scalar(255,0,0), 1, 8);
 		if(nextConf == 1)
 			circle(src_bgr, Point(nextPos.x, nextPos.y), 2, Scalar(0,0,255), -1, 8);
+		if(nextConfAll == 1)
+			circle(src_bgr, Point(nextPosAll.x, nextPosAll.y), 2, Scalar(0,255,0), -1, 8);
 		imshow(windowResult2, src_bgr);
 
 		if(pause)
