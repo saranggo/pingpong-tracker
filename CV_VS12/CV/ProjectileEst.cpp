@@ -8,9 +8,18 @@
 using namespace std;
 using namespace cv;
 
+struct VectorXYZT {
+	float x;
+	float y;
+	float z;
+	float time;
+
+	VectorXYZT(float x, float y, float z, float time): x(x), y(y), z(z), time(time) { }
+};
+
 //tuple <data, sec>
 //return: [p,p_dot]
-static Mat QFit(deque<tuple<float, float>> data)
+static Mat QFit(deque<tuple<float, float>> &data)
 {
 	Mat A = Mat(2, 2, CV_32FC1);
 	Mat b = Mat(2, 1, CV_32FC1);
@@ -44,7 +53,7 @@ static Mat QFit(deque<tuple<float, float>> data)
 
 //tuple <data, sec>
 //return: [p,p_dot]
-static Mat LinFit(deque<tuple<float, float>> data)
+static Mat LinFit(deque<tuple<float, float>> &data)
 {
 	Mat A = Mat(2, 2, CV_32FC1);
 	Mat b = Mat(2, 1, CV_32FC1);
@@ -74,14 +83,49 @@ static Mat LinFit(deque<tuple<float, float>> data)
 	return pMat;
 }
 
-struct VectorXYZT {
-	float x;
-	float y;
-	float z;
-	float time;
+// SVD for Ax = b
+//tuple <data, sec>
+//return: [a0,a1,a2,a3] for a0 + a1*t + a2*t*t + a3*t*t*t = q
+static Mat FitUsingSVD(deque<tuple<float, float>> &data) {
+	//TODO: use q,qdot,qdotdot instead of q,qdot??
+	if(data.size() < 3)
+		return Mat();
 
-	VectorXYZT(float x, float y, float z, float time): x(x), y(y), z(z), time(time) { }
-};
+	Mat A = Mat(data.size() * 2, 4, CV_32FC1);
+	Mat b = Mat(data.size() * 2, 1, CV_32FC1);
+	Mat u, vt, w, ut, v;
+	for (int i = 0; i < (int)data.size() - 1; i++)
+	{
+		float t1 = get<1>(data.at(i));
+		float t2 = t1 * t1;
+		float t3 = t2 * t1;
+
+		A.at<float>(i*2, 0) = 1;
+		A.at<float>(i*2, 1) = t1;
+		A.at<float>(i*2, 2) = t2;
+		A.at<float>(i*2, 3) = t3;
+
+		A.at<float>(i*2+1, 0) = 0;
+		A.at<float>(i*2+1, 1) = 1;
+		A.at<float>(i*2+1, 2) = 2 * t1;
+		A.at<float>(i*2+1, 3) = 3 * t2;
+
+		b.at<float>(i*2, 0) = get<0>(data.at(i));
+		b.at<float>(i*2+1, 0) = (get<0>(data.at(i+1)) - get<0>(data.at(i))) / (get<1>(data.at(i+1)) - get<1>(data.at(i)));
+	}
+	SVD::compute(A, w, u, vt, SVD::MODIFY_A);
+	transpose(u, ut);
+	transpose(vt, v);
+	Mat bp = ut * b;
+	Mat y = Mat(4, 1, CV_32FC1);
+	//TODO: use element wise division function from opencv
+	for (int i = 0; i < 4; i++)
+	{
+		y.at<float>(i, 0) = bp.at<float>(i, 0) / w.at<float>(i, 0);
+	}
+	Mat x = v * y;
+	return x;
+}
 
 class ProjectileEst {
 	int _maxHistory;
@@ -125,43 +169,43 @@ public:
 		Point3f position;
 		Point3f velocity;
 		Point3f acceleration;
-		getVectors(position, velocity, acceleration);
+		float conf = getVectors(position, velocity, acceleration);
 
-		nextPoint.x = position.x + velocity.x + acceleration.x;
-		nextPoint.y = position.y + velocity.y + acceleration.y;
-		nextPoint.z = position.z + velocity.z + acceleration.z;
+		nextPoint.x = position.x + velocity.x + 0.5 * acceleration.x;
+		nextPoint.y = position.y + velocity.y + 0.5 * acceleration.y;
+		nextPoint.z = position.z + velocity.z + 0.5 * acceleration.z;
 
-		//TODO: calculate confidence
-		return 1;
+		return conf;
 	}
 
 	float estimateNextAll(Point3f &nextPoint) {
 		Point3f position;
 		Point3f velocity;
-		getVectors(position, velocity);
+		Point3f acceleration;
+		float conf = getVectorsAll(position, velocity, acceleration);
 
 		nextPoint.x = position.x + velocity.x;
 		nextPoint.y = position.y + velocity.y;
 		nextPoint.z = position.z + velocity.z;
 
-		//TODO: calculate confidence
-		return 1;
+		return conf;
 	}
 
-	void getVectors(Point3f &position_out, Point3f &velocity_out) {
+	float getVectorsAll(Point3f &position_out, Point3f &velocity_out, Point3f &acceleration_out) {
 		if(_points.size() == 0)
-			return;
+			return 0;
 		Point3f position = Point3f(0,0,0);
 		Point3f velocity = Point3f(0,0,0);
+		Point3f acceleration = Point3f(0,0,0);
 
 		deque<tuple<float,float>> positionX;
 		deque<tuple<float,float>> positionY;
 		deque<tuple<float,float>> positionZ;
 
 		for(deque<VectorXYZT>::iterator iter = _points.begin(); iter != _points.end(); ++iter) {
-			positionX.push_back(make_tuple((*iter).x, (*iter).time));
-			positionY.push_back(make_tuple((*iter).y, (*iter).time));
-			positionZ.push_back(make_tuple((*iter).z, (*iter).time));
+			positionX.push_front(make_tuple((*iter).x, (*iter).time));
+			positionY.push_front(make_tuple((*iter).y, (*iter).time));
+			positionZ.push_front(make_tuple((*iter).z, (*iter).time));
 		}
 
 		Mat xvect = LinFit(positionX);
@@ -177,18 +221,61 @@ public:
 
 		position_out = position;
 		velocity_out = velocity;
+		acceleration_out = acceleration;
+
+		//TODO: debug/fix and use this instead
+		if(true) {
+			Mat ax = FitUsingSVD(positionX);
+			Mat ay = FitUsingSVD(positionY);
+			Mat az = FitUsingSVD(positionZ);
+			if(ax.rows == 0)
+				return 0;
+
+			float time1 = _points.at(0).time;
+			float time2 = time1 * time1;
+			float time3 = time2 * time1;
+
+			float a0 = ax.at<float>(0, 0);
+			float a1 = ax.at<float>(1, 0);
+			float a2 = ax.at<float>(2, 0);
+			float a3 = ax.at<float>(3, 0);
+			position.x = a0 + a1 * time1 + a2 * time2 + a3 * time3;
+			velocity.x = a1 + 2 * a2 * time1 + 3 * a3 * time2;
+			acceleration.x = 2 * a2 + 6 * a3 * time1;
+
+			a0 = ay.at<float>(0, 0);
+			a1 = ay.at<float>(1, 0);
+			a2 = ay.at<float>(2, 0);
+			a3 = ay.at<float>(3, 0);
+			position.y = a0 + a1 * time1 + a2 * time2 + a3 * time3;
+			velocity.y = a1 + 2 * a2 * time1 + 3 * a3 * time2;
+			acceleration.y = 2 * a2 + 6 * a3 * time1;
+
+			a0 = az.at<float>(0, 0);
+			a1 = az.at<float>(1, 0);
+			a2 = az.at<float>(2, 0);
+			a3 = az.at<float>(3, 0);
+			position.z = a0 + a1 * time1 + a2 * time2 + a3 * time3;
+			velocity.z = a1 + 2 * a2 * time1 + 3 * a3 * time2;	
+			acceleration.z = 2 * a2 + 6 * a3 * time1;
+
+			position_out = position;
+			velocity_out = velocity;
+			acceleration_out = acceleration;
+		}
+
+		return 1;
 	}
 
-	void getVectors(Point3f &position_out, Point3f &velocity_out, Point3f &acceleration_out) {
+	// only using last three points
+	float getVectors(Point3f &position_out, Point3f &velocity_out, Point3f &acceleration_out) {
 		//TODO: use time (or frames) as dt while calculating vectors??
-		//TODO: use all points to calculate trajectory and then calculate vectors using trajectory
 		if(_points.size() == 0)
-			return;
+			return 0;
 		Point3f position = Point3f(0,0,0);
 		Point3f velocity = Point3f(0,0,0);
 		Point3f acceleration = Point3f(0,0,0);
 
-		// temp: considering last three points
 		if(_points.size() >= 1) {
 			position = Point3f(_points.at(0).x, _points.at(0).y, _points.at(0).z);
 		}
@@ -209,10 +296,37 @@ public:
 			acceleration.y = dy01 - dy12;
 			acceleration.z = dz01 - dz12;
 		}
-
 		position_out = position;
 		velocity_out = velocity;
 		acceleration_out = acceleration;
+
+		//TODO: debug/fix and use this instead
+		if(false){
+			deque<Point3f> vels;
+			vels.clear();
+			deque<Point3f> accels;
+			accels.clear();
+			Point3f accelAvg = Point3f(0,0,0); 
+			for(int i = 0; i < (int)_points.size() - 1; i++)
+				vels.push_back(Point3f(_points.at(i).x - _points.at(i+1).x, _points.at(i).y - _points.at(i+1).y, _points.at(i).z - _points.at(i+1).z));
+			for(int i = 0; i < (int)vels.size() - 1; i++) {
+				Point3f acc = Point3f(vels.at(i).x - vels.at(i+1).x, vels.at(i).y - vels.at(i+1).y, vels.at(i).z - vels.at(i+1).z);
+				accels.push_back(acc);
+				accelAvg += acc;
+			}
+			if(accels.size() != 0)
+				accelAvg = accelAvg * (float)(1.0 / ((int)vels.size() - 1));
+
+			if(_points.size() == 0)
+				position_out = Point3f(_points.at(0).x, _points.at(0).y, _points.at(0).z);
+			if(vels.size() != 0)
+				velocity_out = vels.front();
+			if(accels.size() != 0)
+				acceleration_out = accelAvg;
+		}
+
+		//TODO: calculate the conf as the error between acceleration and accelAvg. What to output as the actual acce??
+		return 1;
 	}
 
 	void invalidatePoints() {

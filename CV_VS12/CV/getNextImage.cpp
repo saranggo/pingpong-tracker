@@ -17,7 +17,7 @@ int getNextImageTest(Mat &dst_bgr, Mat &dst_dep, int numFrame = -1) {
 	string pathBGR = pathBGRStream.str();
 
 	ostringstream pathDepthStream;
-	pathDepthStream << IMG_PATH << "\\depth\\" << frameNo << ".jpg";
+	pathDepthStream << IMG_PATH << "\\depth\\" << frameNo + 1 << ".jpg";
 	string pathDepth = pathDepthStream.str();
 
 #ifdef DBG

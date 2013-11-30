@@ -50,14 +50,15 @@ int main( int argc, char** argv )
 			currPos.x = eDetect.center.x;	//TODO: optimize
 			currPos.y = eDetect.center.y;
 			currPos.z = src_dep.at<uchar>(eDetect.center.x, eDetect.center.y);
-			//currPos.z = *(src_dep.data + src_dep.step[0]*(int)currPos.x + src_dep.step[1]*(int)currPos.y);
 
 			//TODO: convert coordinates to real world - using camera matrix
 
 			/// estimate the next point
 			esti.addPoint(currPos);
 			nextConf = esti.estimateNext(nextPos);
-			nextConfAll = esti.estimateNextAll(nextPosAll);
+			
+			// will work only with world coordinates
+			//nextConfAll = esti.estimateNextAll(nextPosAll);
 
 			//TODO: convert estimated point to image plane
 		}
