@@ -169,26 +169,26 @@ public:
 		Point3f position;
 		Point3f velocity;
 		Point3f acceleration;
-		float conf = getVectors(position, velocity, acceleration);
+		float error = getVectors(position, velocity, acceleration);
 
 		nextPoint.x = position.x + velocity.x + 0.5 * acceleration.x;
 		nextPoint.y = position.y + velocity.y + 0.5 * acceleration.y;
 		nextPoint.z = position.z + velocity.z + 0.5 * acceleration.z;
 
-		return conf;
+		return error;
 	}
 
 	float estimateNextAll(Point3f &nextPoint) {
 		Point3f position;
 		Point3f velocity;
 		Point3f acceleration;
-		float conf = getVectorsAll(position, velocity, acceleration);
+		float error = getVectorsAll(position, velocity, acceleration);
 
-		nextPoint.x = position.x + velocity.x;
-		nextPoint.y = position.y + velocity.y;
-		nextPoint.z = position.z + velocity.z;
+		nextPoint.x = position.x + velocity.x + 0.5 * acceleration.x;
+		nextPoint.y = position.y + velocity.y + 0.5 * acceleration.y;
+		nextPoint.z = position.z + velocity.z + 0.5 * acceleration.z;
 
-		return conf;
+		return error;
 	}
 
 	float getVectorsAll(Point3f &position_out, Point3f &velocity_out, Point3f &acceleration_out) {
@@ -224,7 +224,7 @@ public:
 		acceleration_out = acceleration;
 
 		//TODO: debug/fix and use this instead
-		if(true) {
+		if(false) {
 			Mat ax = FitUsingSVD(positionX);
 			Mat ay = FitUsingSVD(positionY);
 			Mat az = FitUsingSVD(positionZ);
@@ -301,21 +301,24 @@ public:
 		acceleration_out = acceleration;
 
 		//TODO: debug/fix and use this instead
-		if(false){
+		if(true){
 			deque<Point3f> vels;
 			vels.clear();
 			deque<Point3f> accels;
 			accels.clear();
 			Point3f accelAvg = Point3f(0,0,0); 
+			float divFactor = 1;
 			for(int i = 0; i < (int)_points.size() - 1; i++)
 				vels.push_back(Point3f(_points.at(i).x - _points.at(i+1).x, _points.at(i).y - _points.at(i+1).y, _points.at(i).z - _points.at(i+1).z));
 			for(int i = 0; i < (int)vels.size() - 1; i++) {
 				Point3f acc = Point3f(vels.at(i).x - vels.at(i+1).x, vels.at(i).y - vels.at(i+1).y, vels.at(i).z - vels.at(i+1).z);
 				accels.push_back(acc);
-				accelAvg += acc;
+				accelAvg += acc * ((int)vels.size() - i);
+				divFactor += ((int)vels.size() - i);
 			}
 			if(accels.size() != 0)
-				accelAvg = accelAvg * (float)(1.0 / ((int)vels.size() - 1));
+				//accelAvg = accelAvg * (float)(1.0 / ((int)vels.size() - 1));
+					accelAvg = accelAvg * (float)(1.0 / divFactor);
 
 			if(_points.size() == 0)
 				position_out = Point3f(_points.at(0).x, _points.at(0).y, _points.at(0).z);
@@ -325,8 +328,11 @@ public:
 				acceleration_out = accelAvg;
 		}
 
-		//TODO: calculate the conf as the error between acceleration and accelAvg. What to output as the actual acce??
-		return 1;
+		float error = sqrtf(((acceleration.x - acceleration_out.x) * (acceleration.x - acceleration_out.x)
+			+ (acceleration.y - acceleration_out.y) * (acceleration.y - acceleration_out.y) 
+			+ (acceleration.z - acceleration_out.z) * (acceleration.z - acceleration_out.z))/3);
+
+		return error;
 	}
 
 	void invalidatePoints() {
