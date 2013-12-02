@@ -18,7 +18,7 @@ string getString(float f)
 	return ss.str();
 }
 
-bool pause = true;
+bool pause1 = true;
 int main( int argc, char** argv )
 {
 	string windowResult1 = "Result1";
@@ -67,13 +67,17 @@ int main( int argc, char** argv )
 			Point3f depPos;
 			float MrgbArray[3][3] = CAMERA_MATRIX_RGB;
 			float MdepArray[3][3] = CAMERA_MATRIX_DEPTH;
+			depPos.x = MdepArray[0][0]*(rgbPos.x-MrgbArray[0][2])/MrgbArray[0][0] + MdepArray[0][2];
+			depPos.y = MdepArray[1][1]*(rgbPos.y-MrgbArray[1][2])/MrgbArray[1][1] + MdepArray[1][2];
+			
+			/*
 			Mat Mrgb = Mat(3, 3, CV_32FC1, MrgbArray);
 			Mat Mdep = Mat(3, 3, CV_32FC1, MdepArray);
 			Mat MrgbInv = Mrgb.inv();
 			Mat Mdep_rgbInv = Mdep * MrgbInv;
-
 			depPos.x = Mdep_rgbInv.at<float>(0, 0) * rgbPos.x + Mdep_rgbInv.at<float>(0, 1) * rgbPos.y + Mdep_rgbInv.at<float>(0, 2) * 1;
 			depPos.y = Mdep_rgbInv.at<float>(1, 0) * rgbPos.x + Mdep_rgbInv.at<float>(1, 1) * rgbPos.y + Mdep_rgbInv.at<float>(1, 2) * 1;
+			*/
 
 			currPos.x = depPos.x + 10;
 			currPos.y = depPos.y - 95;
@@ -91,7 +95,7 @@ int main( int argc, char** argv )
 			/// estimate the next point
 			esti.addPoint(currPos);
 			nextError = esti.estimateNext(nextPos);
-			
+
 			// will work only with world coordinates
 			//nextErrorAll = esti.estimateNextAll(nextPosAll);
 
@@ -110,7 +114,7 @@ int main( int argc, char** argv )
 		//circle(src_bgr, Point(nextPosAll.x, nextPosAll.y), 2, Scalar(0,255,0), -1, 8);
 		imshow(windowResult2, src_bgr);
 
-		if(pause)
+		if(pause1)
 			waitKey(0);
 		else
 			waitKey(10);
