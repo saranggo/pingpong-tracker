@@ -40,7 +40,7 @@ int main( int argc, char** argv )
 		/// color filter
 		Mat cFilter, src_hsv;
 		cvtColor(src_bgr, src_hsv, CV_RGB2HSV);
-		
+
 		// DEBUG: display debug image
 		//imshow(windowResult2, src_hsv);
 
@@ -48,7 +48,7 @@ int main( int argc, char** argv )
 		/// orange if RGB to HSV: Scalar(115,120,120), Scalar(125,255,255)
 		//scalarFilter(src_hsv, cFilter, Scalar(115,120,120), Scalar(125,255,255), false); // - set1
 		scalarFilter(src_hsv, cFilter, Scalar(115,90,120), Scalar(150,255,255), false); // - set2
-		
+
 		// DEBUG: display debug image
 		//imshow(windowResult3, cFilter);
 
@@ -105,11 +105,15 @@ int main( int argc, char** argv )
 			//TODO: convert estimated point to image plane
 
 			// form a detection window based on the predicted position and the current dims of the object
-			float maxHW = MAX(eDetect.size.width, eDetect.size.height);
-			detectWindow.x = MAX(0, nextPos.x - maxHW * 1.5 - 2 * nextError);
-			detectWindow.width = maxHW * 3 + 4 * nextError;
-			detectWindow.y = MAX(0, nextPos.y - maxHW * 1.5 - 2 * nextError);
-			detectWindow.height = maxHW * 3 + 4 * nextError;
+			if(nextError == 0.0)
+				detectWindow = Rect(0,0,640,480);
+			else {
+				float maxHW = MAX(eDetect.size.width, eDetect.size.height);
+				detectWindow.x = MAX(0, nextPos.x - maxHW * 1.5 - 2 * nextError);
+				detectWindow.width = maxHW * 3 + 4 * nextError;
+				detectWindow.y = MAX(0, nextPos.y - maxHW * 1.5 - 2 * nextError);
+				detectWindow.height = maxHW * 3 + 4 * nextError;
+			}
 
 		}
 		else {

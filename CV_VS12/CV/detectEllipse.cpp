@@ -28,12 +28,11 @@ int detectEllipse(const Mat &src, RotatedRect &target_out, int grayThresh, int e
 		src_gray = src.clone();
 
 	//Matrix subset of image containing only rectangle search area
-	Mat searchArea(src_gray, Range(regionToSearch.y, regionToSearch.height + regionToSearch.y), Range(regionToSearch.x, regionToSearch.width + regionToSearch.x));
-
+	Mat searchArea(src_gray, Range(MIN(src_gray.rows, regionToSearch.y), MIN(src_gray.rows, regionToSearch.height + regionToSearch.y)), Range(MIN(src_gray.cols, regionToSearch.x), MIN(src_gray.cols, regionToSearch.width + regionToSearch.x)));
 
 	/// Detect edges
 	threshold( searchArea, edges_output, grayThresh, 255, THRESH_BINARY );
-	
+
 	/// Find contours
 	findContours( edges_output, contours, hierarchy, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE, Point(0, 0) ); //CV_RETR_TREE, CV_RETR_CCOMP
 
@@ -68,7 +67,7 @@ int detectEllipse(const Mat &src, RotatedRect &target_out, int grayThresh, int e
 	if(maxSizeIndex != -1) {
 		target_out = minRect[maxSizeIndex];
 
-		
+
 		target_out.center.x = target_out.center.x + regionToSearch.x;
 		target_out.center.y = target_out.center.y + regionToSearch.y;
 
