@@ -8,7 +8,7 @@ using namespace cv;
 using namespace std;
 
 extern void scalarFilter(const Mat&, Mat&, const Scalar&, const Scalar&,  bool);
-extern int detectEllipse(const Mat&, RotatedRect&, int, int, int);
+extern int detectEllipse(const Mat&, RotatedRect&, int, int, int, Rect&);
 int getNextImage(Mat&, Mat&, int n=-1);
 
 string getString(float f)
@@ -54,8 +54,10 @@ int main( int argc, char** argv )
 		//TODO: Either store points in world coordinates - estimate position in world and project to camera plane
 		//		OR store points in image coordinates - estimate postition in image plane and project to world
 
+		Rect r = Rect(Point(30,30), Point(600, 400)); //TODO: Replace w/Confidence Rectangle Window
+
 		//TODO: get next estimate with error. form bb for detection
-		if(detectEllipse(cFilter, eDetect, 150, 7, 7) == 1) {
+		if(detectEllipse(cFilter, eDetect, 150, 7, 7, r) == 1) {
 			/// get current position - acceleration on the Y axis
 			Point3f rgbPos;
 			rgbPos.x = eDetect.center.x;	//TODO: optimize
