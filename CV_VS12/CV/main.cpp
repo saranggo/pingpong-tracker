@@ -90,8 +90,8 @@ int main( int argc, char** argv )
 
 
 			// DEBUG: display xy from color image to depth image
-			circle(src_dep, Point(currPos.x, currPos.y), 2, Scalar(0,0,255), -1, 8);
-			imshow(windowResult2, src_dep);
+			//circle(src_dep, Point(currPos.x, currPos.y), 2, Scalar(0,0,255), -1, 8);
+			//imshow(windowResult2, src_dep);
 
 			//TODO: convert coordinates to world - using camera matrix
 
