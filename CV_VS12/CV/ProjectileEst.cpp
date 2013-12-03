@@ -166,14 +166,31 @@ public:
 	}
 
 	float estimateNext(Point3f &nextPoint) {
+		deque<Point3f> nextPoints;
+		float error = estimateNext(1, Rect(), nextPoints);
+		nextPoint = nextPoints.front();
+
+		return error;
+	}
+
+	float estimateNext(int numPoints, Rect limit, deque<Point3f> &nextPoints) {
+		bool terminate = false;
+		nextPoints = deque<Point3f>();
 		Point3f position;
 		Point3f velocity;
 		Point3f acceleration;
 		float error = getVectors(position, velocity, acceleration);
+		for(int i = 0; i < numPoints; i++) {
+			Point3f nextPoint;
+			nextPoint = position + velocity + 0.5 * acceleration;
+			nextPoints.push_back(nextPoint);
 
-		nextPoint.x = position.x + velocity.x + 0.5 * acceleration.x;
-		nextPoint.y = position.y + velocity.y + 0.5 * acceleration.y;
-		nextPoint.z = position.z + velocity.z + 0.5 * acceleration.z;
+			position = nextPoint;
+			velocity = velocity + acceleration;
+
+			if(nextPoint.x < limit.x || nextPoint.y < limit.y || nextPoint.x > (limit.x + limit.width) || nextPoint.y > (limit.y + limit.height))
+				break;
+		}
 
 		return error;
 	}

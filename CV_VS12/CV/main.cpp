@@ -31,7 +31,8 @@ int main( int argc, char** argv )
 	getNextImage(src_bgr, src_dep, 9);
 	ProjectileEst esti;
 	RotatedRect eDetect;
-	Point3f currPos, nextPos, nextPosAll;
+	Point3f currPos, nextPos;
+	deque<Point3f> nextPositions;
 	float nextError = 0, nextErrorAll = 0;
 	Rect detectWindow = Rect(0,0,640,480);
 
@@ -97,7 +98,8 @@ int main( int argc, char** argv )
 
 			/// estimate the next point - TODO: use world coordinates after conversion
 			esti.addPoint(rgbPos);
-			nextError = esti.estimateNext(nextPos);
+			nextError = esti.estimateNext(100, Rect(0,0,640,480), nextPositions);
+			nextPos = nextPositions.front();
 
 			// will work only with world coordinates
 			//nextErrorAll = esti.estimateNextAll(nextPosAll);
@@ -127,9 +129,10 @@ int main( int argc, char** argv )
 		eDetect.points(rect_points);
 		for( int j = 0; j < 4; j++ )
 			line(src_bgr, rect_points[j], rect_points[(j + 1) % 4], Scalar(255,0,0), 1, 8);
-		circle(src_bgr, Point(nextPos.x, nextPos.y), 2, Scalar(0,0,255), -1, 8);
+		for(int j = 0; j < nextPositions.size(); j++) {
+			circle(src_bgr, Point(nextPositions.at(j).x, nextPositions.at(j).y), 2, Scalar(0,0,255), -1, 8);
+		}
 		putText(src_bgr, getString(nextError), Point(nextPos.x, nextPos.y), FONT_HERSHEY_PLAIN, 1, Scalar(0,0,255));
-		//circle(src_bgr, Point(nextPosAll.x, nextPosAll.y), 2, Scalar(0,255,0), -1, 8);
 		rectangle(src_bgr, detectWindow, Scalar(0,255,0));
 		imshow(windowResult1, src_bgr);
 
