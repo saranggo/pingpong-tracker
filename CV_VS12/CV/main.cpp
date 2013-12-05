@@ -9,7 +9,8 @@ using namespace std;
 
 extern void scalarFilter(const Mat&, Mat&, const Scalar&, const Scalar&,  bool);
 extern int detectEllipse(const Mat&, RotatedRect&, int, int, int, Rect&);
-int getNextImage(Mat&, Mat&, int n=-1);
+extern int getNextImage(Mat&, Mat&, int n=-1);
+extern Rect getWindow(Rect, float, float);
 
 string getString(float f)
 {
@@ -109,13 +110,8 @@ int main( int argc, char** argv )
 			// form a detection window based on the predicted position and the current dims of the object
 			if(nextError == 0.0)
 				detectWindow = Rect(0,0,640,480);
-			else {
-				float maxHW = MAX(eDetect.size.width, eDetect.size.height);
-				detectWindow.x = MAX(0, nextPos.x - maxHW * 1.5 - 2 * nextError);
-				detectWindow.width = maxHW * 3 + 4 * nextError;
-				detectWindow.y = MAX(0, nextPos.y - maxHW * 1.5 - 2 * nextError);
-				detectWindow.height = maxHW * 3 + 4 * nextError;
-			}
+			else 
+				detectWindow = getWindow(Rect(nextPos.x, nextPos.y, eDetect.size.width, eDetect.size.height), 3, 2*nextError);
 
 		}
 		else {

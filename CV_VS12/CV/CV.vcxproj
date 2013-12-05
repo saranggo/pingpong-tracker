@@ -147,6 +147,7 @@
   <ItemGroup>
     <ClCompile Include="detectEllipse.cpp" />
     <ClCompile Include="getNextImage.cpp" />
+    <ClCompile Include="getWindow.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="ProjectileEst.cpp" />
     <ClCompile Include="scalarFilter.cpp" />

@@ -29,6 +29,8 @@ int detectEllipse(const Mat &src, RotatedRect &target_out, int grayThresh, int e
 
 	//Matrix subset of image containing only rectangle search area
 	Mat searchArea(src_gray, Range(MIN(src_gray.rows, regionToSearch.y), MIN(src_gray.rows, regionToSearch.height + regionToSearch.y)), Range(MIN(src_gray.cols, regionToSearch.x), MIN(src_gray.cols, regionToSearch.width + regionToSearch.x)));
+	if(searchArea.rows == 0 || searchArea.cols == 0)
+		return 0;
 
 	/// Detect edges
 	threshold( searchArea, edges_output, grayThresh, 255, THRESH_BINARY );
