@@ -1,6 +1,7 @@
 #include <opencv2/opencv.hpp>
 #include <string>
 #include <cmath>
+#include <time.h>
 #include "ProjectileEst.cpp"
 #include "config.h"
 
@@ -10,7 +11,7 @@ using namespace std;
 extern void scalarFilter(const Mat&, Mat&, const Scalar&, const Scalar&,  bool, Rect&);
 extern int detectEllipse(const Mat&, RotatedRect&, int, int, int, Rect&);
 extern int getNextImage(Mat&, Mat&, int n=-1);
-extern Rect getWindow(Rect, float, float);
+extern Rect getWindow(Rect, float, float, Rect limit = Rect());
 
 string getString(float f)
 {
@@ -20,6 +21,7 @@ string getString(float f)
 }
 
 bool pause1 = true;
+bool profileDetection = false;
 int main( int argc, char** argv )
 {
 	string windowResult1 = "Result1";
@@ -35,7 +37,7 @@ int main( int argc, char** argv )
 	Point3f currPos, nextPos;
 	deque<Point3f> nextPositions;
 	float nextError = 0, nextErrorAll = 0;
-	Rect detectWindow = Rect(0,0,640,480);
+	Rect detectWindow = IMAGE_RECT;
 
 	while(getNextImage(src_bgr, src_dep))
 	{
@@ -46,8 +48,6 @@ int main( int argc, char** argv )
 		// DEBUG: display debug image
 		//imshow(windowResult2, src_hsv);
 
-		/// orange if BGR to HSV: Scalar(0,120,120), Scalar(30,255,255)
-		/// orange if RGB to HSV: Scalar(115,120,120), Scalar(125,255,255)
 		//scalarFilter(src_hsv, cFilter, Scalar(115,120,120), Scalar(125,255,255), false); // - set1
 		scalarFilter(src_hsv, cFilter, Scalar(115,90,120), Scalar(150,255,255), false, detectWindow); // - set2
 
@@ -61,7 +61,6 @@ int main( int argc, char** argv )
 		//TODO: Either store points in world coordinates - estimate position in world and project to camera plane
 		//		OR store points in image coordinates - estimate postition in image plane and project to world
 
-		//TODO: get next estimate with error. form bb for detection
 		if(detectEllipse(cFilter, eDetect, 150, 7, 7, detectWindow) == 1) {
 			/// get current position - acceleration on the Y axis
 			Point3f rgbPos;
@@ -70,36 +69,47 @@ int main( int argc, char** argv )
 
 
 
-			//DEBUG - use this for now. get depth images converted in rbg frame using kinect SDK
+			//TODO - use this for now. get depth images converted in rbg frame using kinect SDK
+			//OR - appx by using nearest point in rect defined by obj's current position
 			Point3f depPos;
 			float MrgbArray[3][3] = CAMERA_MATRIX_RGB;
 			float MdepArray[3][3] = CAMERA_MATRIX_DEPTH;
 			depPos.x = MdepArray[0][0]*(rgbPos.x-MrgbArray[0][2])/MrgbArray[0][0] + MdepArray[0][2];
 			depPos.y = MdepArray[1][1]*(rgbPos.y-MrgbArray[1][2])/MrgbArray[1][1] + MdepArray[1][2];
-			/*
-			Mat Mrgb = Mat(3, 3, CV_32FC1, MrgbArray);
-			Mat Mdep = Mat(3, 3, CV_32FC1, MdepArray);
-			Mat MrgbInv = Mrgb.inv();
-			Mat Mdep_rgbInv = Mdep * MrgbInv;
-			depPos.x = Mdep_rgbInv.at<float>(0, 0) * rgbPos.x + Mdep_rgbInv.at<float>(0, 1) * rgbPos.y + Mdep_rgbInv.at<float>(0, 2) * 1;
-			depPos.y = Mdep_rgbInv.at<float>(1, 0) * rgbPos.x + Mdep_rgbInv.at<float>(1, 1) * rgbPos.y + Mdep_rgbInv.at<float>(1, 2) * 1;
-			*/
-			currPos.x = depPos.x + 10;
-			currPos.y = depPos.y - 95;
-			currPos.z = src_dep.at<uchar>(MAX(0,MIN(depPos.y,src_dep.rows - 1)), MAX(0,MIN(depPos.x,src_dep.cols - 1))); 
+			depPos.x = MAX(0,MIN(depPos.x,src_dep.cols - 1));
+			depPos.y = MAX(0,MIN(depPos.y,src_dep.rows - 1));
+			
+			//Manual offset which works - need to find a proper conversion from camera matrix
+			depPos.x = depPos.x + 10;
+			depPos.y = depPos.y - 95;
+			//TODO:
+			double maxValue = 0;
+			Rect windowTemp = getWindow(Rect(depPos.x, depPos.y, eDetect.size.width, eDetect.size.height), 2, 10, IMAGE_RECT);
+			Mat mask = Mat::zeros(src_dep.size(), CV_8U);
+			Mat roi(mask, windowTemp);
+			roi = Scalar(255, 255, 255);
+			int maxIdx[2];
+			minMaxIdx(src_dep, NULL, &maxValue, NULL, maxIdx, mask);
+			currPos.z = (float)maxValue;
 
-
-
-
-			// DEBUG: display xy from color image to depth image
-			//circle(src_dep, Point(currPos.x, currPos.y), 2, Scalar(0,0,255), -1, 8);
-			//imshow(windowResult2, src_dep);
+			// DEBUG: display xy in dep frame calculated from xy of color image. 
+			// Also, the greatest dep val (nearest point) in a given rect
+			Mat src_dep_temp = src_dep.clone();
+			rectangle(src_dep_temp, windowTemp, Scalar(0,255,0));
+			circle(src_dep_temp, Point(depPos.x, depPos.y), 2, Scalar(0,255,0));
+			circle(src_dep_temp, Point(maxIdx[1], maxIdx[0]), 2, Scalar(0,255,0));
+			imshow(windowResult3, src_dep_temp);
 
 			//TODO: convert coordinates to world - using camera matrix
+			currPos.x = (rgbPos.x - MrgbArray[0][2]) * currPos.z / MrgbArray[0][0];
+			currPos.y = (rgbPos.y - MrgbArray[1][2]) * currPos.z / MrgbArray[1][1];
+
+			//DEBUG: currPos out
+			cout << currPos.x << " " << currPos.y << " " << currPos.z << endl;
 
 			/// estimate the next point - TODO: use world coordinates after conversion
 			esti.addPoint(rgbPos);
-			nextError = esti.estimateNext(100, Rect(0,0,640,480), nextPositions);
+			nextError = esti.estimateNext(100, IMAGE_RECT, nextPositions);
 			nextPos = nextPositions.front();
 
 			// will work only with world coordinates
@@ -109,9 +119,9 @@ int main( int argc, char** argv )
 
 			// form a detection window based on the predicted position and the current dims of the object
 			if(nextError == 0.0)
-				detectWindow = Rect(0,0,640,480);
+				detectWindow = IMAGE_RECT;
 			else 
-				detectWindow = getWindow(Rect(nextPos.x, nextPos.y, eDetect.size.width, eDetect.size.height), 3, 2*nextError);
+				detectWindow = getWindow(Rect(nextPos.x, nextPos.y, eDetect.size.width, eDetect.size.height), 3, 2*nextError, IMAGE_RECT);
 
 		}
 		else {
@@ -119,6 +129,28 @@ int main( int argc, char** argv )
 			detectWindow = Rect(0,0,640,480);
 			eDetect = RotatedRect();
 		}
+
+		
+		if(profileDetection) {
+			//Optimized
+			clock_t dt1 = clock();
+			cvtColor(src_bgr, src_hsv, CV_RGB2HSV);
+			scalarFilter(src_hsv, cFilter, Scalar(115,90,120), Scalar(150,255,255), false);
+			scalarFilter(src_dep, dFilter, Scalar(150), Scalar(255), false);
+			detectEllipse(cFilter, eDetect, 150, 7, 7, detectWindow);
+			dt1 = clock() - dt1;
+
+			//Without optimization
+			clock_t dt2 = clock();
+			cvtColor(src_bgr, src_hsv, CV_RGB2HSV);
+			scalarFilter(src_hsv, cFilter, Scalar(115,90,120), Scalar(150,255,255), false);
+			scalarFilter(src_dep, dFilter, Scalar(150), Scalar(255), false);
+			detectEllipse(cFilter, eDetect, 150, 7, 7, Rect(0,0,640,480));
+			dt2 = clock() - dt2;
+
+			cout << "Time: " << dt1 << "\t" << dt2 << endl;
+		}
+
 
 		/// DEBUG: display detected ellipse - rotated rectangle
 		Point2f rect_points[4]; 
