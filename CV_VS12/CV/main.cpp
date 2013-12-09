@@ -7,7 +7,7 @@
 using namespace cv;
 using namespace std;
 
-extern void scalarFilter(const Mat&, Mat&, const Scalar&, const Scalar&,  bool);
+extern void scalarFilter(const Mat&, Mat&, const Scalar&, const Scalar&,  bool, Rect&);
 extern int detectEllipse(const Mat&, RotatedRect&, int, int, int, Rect&);
 extern int getNextImage(Mat&, Mat&, int n=-1);
 extern Rect getWindow(Rect, float, float);
@@ -49,14 +49,14 @@ int main( int argc, char** argv )
 		/// orange if BGR to HSV: Scalar(0,120,120), Scalar(30,255,255)
 		/// orange if RGB to HSV: Scalar(115,120,120), Scalar(125,255,255)
 		//scalarFilter(src_hsv, cFilter, Scalar(115,120,120), Scalar(125,255,255), false); // - set1
-		scalarFilter(src_hsv, cFilter, Scalar(115,90,120), Scalar(150,255,255), false); // - set2
+		scalarFilter(src_hsv, cFilter, Scalar(115,90,120), Scalar(150,255,255), false, detectWindow); // - set2
 
 		// DEBUG: display debug image
 		//imshow(windowResult3, cFilter);
 
 		/// depth filter
 		Mat dFilter;
-		scalarFilter(src_dep, dFilter, Scalar(150), Scalar(255), false);
+		scalarFilter(src_dep, dFilter, Scalar(150), Scalar(255), false, detectWindow);
 
 		//TODO: Either store points in world coordinates - estimate position in world and project to camera plane
 		//		OR store points in image coordinates - estimate postition in image plane and project to world
