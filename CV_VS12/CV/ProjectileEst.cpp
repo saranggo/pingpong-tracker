@@ -127,6 +127,25 @@ static Mat FitUsingSVD(deque<tuple<float, float>> &data) {
 	return x;
 }
 
+static Point3f AvgAcceleration(deque<VectorXYZT> points, bool useWeight = false) {
+	deque<Point3f> vels;
+	deque<Point3f> accels;
+	Point3f accelAvg = Point3f(0,0,0); 
+	float divFactor = 1;
+	for(int i = 0; i < (int)points.size() - 1; i++)
+		vels.push_back(Point3f(points.at(i).x - points.at(i+1).x, points.at(i).y - points.at(i+1).y, points.at(i).z - points.at(i+1).z));
+	for(int i = 0; i < (int)vels.size() - 1; i++) {
+		Point3f acc = Point3f(vels.at(i).x - vels.at(i+1).x, vels.at(i).y - vels.at(i+1).y, vels.at(i).z - vels.at(i+1).z);
+		accels.push_back(acc);
+		accelAvg += useWeight ? acc * ((int)vels.size() - i) : acc;
+		divFactor += useWeight ? ((int)vels.size() - i) : 1;
+	}
+	if(accels.size() != 0)
+		accelAvg = accelAvg * (float)(1.0 / divFactor);
+
+	return accelAvg;
+}
+
 class ProjectileEst {
 	int _maxHistory;
 	deque<VectorXYZT> _points;
@@ -317,32 +336,10 @@ public:
 		velocity_out = velocity;
 		acceleration_out = acceleration;
 
-		//TODO: debug/fix and use this instead
+		//TODO: debug/fix and use this with ransac
 		if(true){
-			deque<Point3f> vels;
-			vels.clear();
-			deque<Point3f> accels;
-			accels.clear();
-			Point3f accelAvg = Point3f(0,0,0); 
-			float divFactor = 1;
-			for(int i = 0; i < (int)_points.size() - 1; i++)
-				vels.push_back(Point3f(_points.at(i).x - _points.at(i+1).x, _points.at(i).y - _points.at(i+1).y, _points.at(i).z - _points.at(i+1).z));
-			for(int i = 0; i < (int)vels.size() - 1; i++) {
-				Point3f acc = Point3f(vels.at(i).x - vels.at(i+1).x, vels.at(i).y - vels.at(i+1).y, vels.at(i).z - vels.at(i+1).z);
-				accels.push_back(acc);
-				accelAvg += acc * ((int)vels.size() - i);
-				divFactor += ((int)vels.size() - i);
-			}
-			if(accels.size() != 0)
-				//accelAvg = accelAvg * (float)(1.0 / ((int)vels.size() - 1));
-					accelAvg = accelAvg * (float)(1.0 / divFactor);
-
-			if(_points.size() == 0)
-				position_out = Point3f(_points.at(0).x, _points.at(0).y, _points.at(0).z);
-			if(vels.size() != 0)
-				velocity_out = vels.front();
-			if(accels.size() != 0)
-				acceleration_out = accelAvg;
+			Point3f accelAvg = AvgAcceleration(_points, true);
+			acceleration_out = accelAvg;
 		}
 
 		float error = sqrtf(((acceleration.x - acceleration_out.x) * (acceleration.x - acceleration_out.x)

@@ -20,10 +20,11 @@ void scalarFilter(const Mat &src, Mat &dst, const Scalar &lower, const Scalar &h
 	if(flip)
 		bitwise_xor(searchArea, Scalar(255, 0, 0, 0), searchArea, NULL);
 
-	//Always keep output image 480 x 640
-	Mat tmp = src;
-	tmp(r1,r2) = searchArea;
+	Mat tmp = Mat::zeros(src.size(), CV_8U);
+	if(r1.size() > 0 && r2.size() > 0)
+		searchArea.copyTo(tmp.rowRange(r1).colRange(r2));
 
-	//	imshow("ReplacedImage",tmp);
+	//imshow("ReplacedImage",tmp);
+	//imshow("ReplacedImage1",searchArea);
 	dst = tmp;
 }

@@ -52,11 +52,11 @@ int main( int argc, char** argv )
 		scalarFilter(src_hsv, cFilter, Scalar(115,90,120), Scalar(150,255,255), false, detectWindow); // - set2
 
 		// DEBUG: display debug image
-		//imshow(windowResult3, cFilter);
+		//imshow(windowResult2, cFilter);
 
 		/// depth filter
 		Mat dFilter;
-		scalarFilter(src_dep, dFilter, Scalar(150), Scalar(255), false, detectWindow);
+		//scalarFilter(src_dep, dFilter, Scalar(150), Scalar(255), false, detectWindow);
 
 		//TODO: Either store points in world coordinates - estimate position in world and project to camera plane
 		//		OR store points in image coordinates - estimate postition in image plane and project to world
@@ -135,17 +135,17 @@ int main( int argc, char** argv )
 			//Optimized
 			clock_t dt1 = clock();
 			cvtColor(src_bgr, src_hsv, CV_RGB2HSV);
-			scalarFilter(src_hsv, cFilter, Scalar(115,90,120), Scalar(150,255,255), false);
-			scalarFilter(src_dep, dFilter, Scalar(150), Scalar(255), false);
+			scalarFilter(src_hsv, cFilter, Scalar(115,90,120), Scalar(150,255,255), false, detectWindow);
+			scalarFilter(src_dep, dFilter, Scalar(150), Scalar(255), false, detectWindow);
 			detectEllipse(cFilter, eDetect, 150, 7, 7, detectWindow);
 			dt1 = clock() - dt1;
 
 			//Without optimization
 			clock_t dt2 = clock();
 			cvtColor(src_bgr, src_hsv, CV_RGB2HSV);
-			scalarFilter(src_hsv, cFilter, Scalar(115,90,120), Scalar(150,255,255), false);
-			scalarFilter(src_dep, dFilter, Scalar(150), Scalar(255), false);
-			detectEllipse(cFilter, eDetect, 150, 7, 7, Rect(0,0,640,480));
+			scalarFilter(src_hsv, cFilter, Scalar(115,90,120), Scalar(150,255,255), false, IMAGE_RECT);
+			scalarFilter(src_dep, dFilter, Scalar(150), Scalar(255), false, IMAGE_RECT);
+			detectEllipse(cFilter, eDetect, 150, 7, 7, IMAGE_RECT);
 			dt2 = clock() - dt2;
 
 			cout << "Time: " << dt1 << "\t" << dt2 << endl;
