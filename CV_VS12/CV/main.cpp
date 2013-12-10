@@ -78,7 +78,7 @@ int main( int argc, char** argv )
 			depPos.y = MdepArray[1][1]*(rgbPos.y-MrgbArray[1][2])/MrgbArray[1][1] + MdepArray[1][2];
 			depPos.x = MAX(0,MIN(depPos.x,src_dep.cols - 1));
 			depPos.y = MAX(0,MIN(depPos.y,src_dep.rows - 1));
-			
+
 			//Manual offset which works - need to find a proper conversion from camera matrix
 			depPos.x = depPos.x + 10;
 			depPos.y = depPos.y - 95;
@@ -130,22 +130,28 @@ int main( int argc, char** argv )
 			eDetect = RotatedRect();
 		}
 
-		
+
 		if(profileDetection) {
 			//Optimized
 			clock_t dt1 = clock();
-			cvtColor(src_bgr, src_hsv, CV_RGB2HSV);
-			scalarFilter(src_hsv, cFilter, Scalar(115,90,120), Scalar(150,255,255), false, detectWindow);
-			scalarFilter(src_dep, dFilter, Scalar(150), Scalar(255), false, detectWindow);
-			detectEllipse(cFilter, eDetect, 150, 7, 7, detectWindow);
+			for (int i = 0; i < 1000; i++)
+			{
+				cvtColor(src_bgr, src_hsv, CV_RGB2HSV);
+				scalarFilter(src_hsv, cFilter, Scalar(115,90,120), Scalar(150,255,255), false, detectWindow);
+				scalarFilter(src_dep, dFilter, Scalar(150), Scalar(255), false, detectWindow);
+				detectEllipse(cFilter, eDetect, 150, 7, 7, detectWindow);
+			}
 			dt1 = clock() - dt1;
 
 			//Without optimization
 			clock_t dt2 = clock();
-			cvtColor(src_bgr, src_hsv, CV_RGB2HSV);
-			scalarFilter(src_hsv, cFilter, Scalar(115,90,120), Scalar(150,255,255), false, IMAGE_RECT);
-			scalarFilter(src_dep, dFilter, Scalar(150), Scalar(255), false, IMAGE_RECT);
-			detectEllipse(cFilter, eDetect, 150, 7, 7, IMAGE_RECT);
+			for (int i = 0; i < 1000; i++)
+			{
+				cvtColor(src_bgr, src_hsv, CV_RGB2HSV);
+				scalarFilter(src_hsv, cFilter, Scalar(115,90,120), Scalar(150,255,255), false, IMAGE_RECT);
+				scalarFilter(src_dep, dFilter, Scalar(150), Scalar(255), false, IMAGE_RECT);
+				detectEllipse(cFilter, eDetect, 150, 7, 7, IMAGE_RECT);
+			}
 			dt2 = clock() - dt2;
 
 			cout << "Time: " << dt1 << "\t" << dt2 << endl;

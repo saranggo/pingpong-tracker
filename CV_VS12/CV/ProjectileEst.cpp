@@ -127,7 +127,8 @@ static Mat FitUsingSVD(deque<tuple<float, float>> &data) {
 	return x;
 }
 
-static Point3f AvgAcceleration(deque<VectorXYZT> points, bool useWeight = false) {
+static bool point3fComp (Point3f i,Point3f j) { return ((i.x*i.x + i.y*i.y + i.z*i.z)<(j.x*j.x + j.y*j.y + j.z*j.z)); }
+static Point3f AvgAcceleration(deque<VectorXYZT> points, bool useMedian = false, bool useWeight = false) {
 	deque<Point3f> vels;
 	deque<Point3f> accels;
 	Point3f accelAvg = Point3f(0,0,0); 
@@ -141,7 +142,12 @@ static Point3f AvgAcceleration(deque<VectorXYZT> points, bool useWeight = false)
 		divFactor += useWeight ? ((int)vels.size() - i) : 1;
 	}
 	if(accels.size() != 0)
-		accelAvg = accelAvg * (float)(1.0 / divFactor);
+		if(useMedian) {
+			sort(accels.begin(), accels.end(), point3fComp);
+			accelAvg = accels.at((int)ceil(accels.size()/2));
+		}
+		else
+			accelAvg = accelAvg * (float)(1.0 / divFactor);
 
 	return accelAvg;
 }
@@ -337,10 +343,38 @@ public:
 		acceleration_out = acceleration;
 
 		//TODO: debug/fix and use this with ransac
-		if(true){
-			Point3f accelAvg = AvgAcceleration(_points, true);
-			acceleration_out = accelAvg;
+		if(_points.size() > 3) {
+			deque<Point3f> accels;
+			float minNorm = 999;
+			for (int i = 0; i < _points.size() - 2; i++)
+			{
+				for (int j = i + 2; j < _points.size(); j++)
+				{
+					deque<VectorXYZT> points;
+					for (int k = i; k <= j; k++)
+					{
+						points.push_front(_points.at(k));
+					}
+					accels.push_front(AvgAcceleration(points, false, false));
+				}
+			}
+			for (int i = 0; i < accels.size(); i++)
+			{
+				float norm = 0;
+				for (int j = 0; j < accels.size(); j++)
+				{
+					Point3f acc1 = accels.at(i);
+					Point3f acc2 = accels.at(j);
+					norm += (acc1.x - acc2.x)*(acc1.x - acc2.x)+(acc1.y - acc2.y)*(acc1.y - acc2.y)+(acc1.z - acc2.z)*(acc1.z - acc2.z);
+				}
+				if(norm < minNorm) {
+					minNorm = norm;
+					acceleration_out = accels.at(i);
+				}
+			}
 		}
+		else
+			acceleration_out = AvgAcceleration(_points, false, true);
 
 		float error = sqrtf(((acceleration.x - acceleration_out.x) * (acceleration.x - acceleration_out.x)
 			+ (acceleration.y - acceleration_out.y) * (acceleration.y - acceleration_out.y) 
