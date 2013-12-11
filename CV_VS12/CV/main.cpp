@@ -103,9 +103,6 @@ int main( int argc, char** argv )
 			currPosWorld.x = (rgbPos.x - MrgbArray[0][2]) * currPosWorld.z / MrgbArray[0][0];
 			currPosWorld.y = (rgbPos.y - MrgbArray[1][2]) * currPosWorld.z / MrgbArray[1][1];
 
-			//DEBUG: currPos out
-			cout << currPosWorld.x << " " << currPosWorld.y << " " << currPosWorld.z << endl;
-
 			/// estimate the next point
 			esti.addPoint(rgbPos);
 			nextError = esti.estimateNext(100, IMAGE_RECT, nextPositions);
@@ -115,10 +112,15 @@ int main( int argc, char** argv )
 			nextErrorWorld = estiWorld.estimateNext(25, Rect(), nextPositionsWorld);
 			nextPosWorld = nextPositionsWorld.front();
 
+			//DEBUG: vectors out
+			Point3f currPosition, currVelocity, currAcceleration;
+			estiWorld.getVectors(currPosition, currVelocity, currAcceleration);
+			cout << currPosition.x << " " << currPosition.y << " "  << currPosition.z << endl;
+			cout << currVelocity.x << " " << currVelocity.y << " "  << currVelocity.z << endl;
+			cout << currAcceleration.x << " " << currAcceleration.y << " "  << currAcceleration.z << endl;
+
 			// will work only with world coordinates
 			//nextErrorAll = esti.estimateNextAll(nextPosAll);
-
-			//TODO: convert estimated point to image plane
 
 			// form a detection window based on the predicted position and the current dims of the object
 			if(nextError == 0.0)
