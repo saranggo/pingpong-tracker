@@ -33,10 +33,12 @@ int main( int argc, char** argv )
 	Mat src_bgr, src_dep;
 	getNextImage(src_bgr, src_dep, 9);
 	ProjectileEst esti;
+	ProjectileEst estiWorld;
 	RotatedRect eDetect;
-	Point3f currPos, nextPos;
+	Point3f currPosWorld, nextPos, nextPosWorld;
 	deque<Point3f> nextPositions;
-	float nextError = 0, nextErrorAll = 0;
+	deque<Point3f> nextPositionsWorld;
+	float nextError = 0, nextErrorAll = 0, nextErrorWorld = 0;
 	Rect detectWindow = IMAGE_RECT;
 
 	while(getNextImage(src_bgr, src_dep))
@@ -67,8 +69,6 @@ int main( int argc, char** argv )
 			rgbPos.x = eDetect.center.x;	//TODO: optimize
 			rgbPos.y = eDetect.center.y;
 
-
-
 			//TODO - use this for now. get depth images converted in rbg frame using kinect SDK
 			//OR - appx by using nearest point in rect defined by obj's current position
 			Point3f depPos;
@@ -78,7 +78,6 @@ int main( int argc, char** argv )
 			depPos.y = MdepArray[1][1]*(rgbPos.y-MrgbArray[1][2])/MrgbArray[1][1] + MdepArray[1][2];
 			depPos.x = MAX(0,MIN(depPos.x,src_dep.cols - 1));
 			depPos.y = MAX(0,MIN(depPos.y,src_dep.rows - 1));
-
 			//Manual offset which works - need to find a proper conversion from camera matrix
 			depPos.x = depPos.x + 10;
 			depPos.y = depPos.y - 95;
@@ -90,7 +89,7 @@ int main( int argc, char** argv )
 			roi = Scalar(255, 255, 255);
 			int maxIdx[2];
 			minMaxIdx(src_dep, NULL, &maxValue, NULL, maxIdx, mask);
-			currPos.z = (float)maxValue;
+			currPosWorld.z = (float)maxValue;
 
 			// DEBUG: display xy in dep frame calculated from xy of color image. 
 			// Also, the greatest dep val (nearest point) in a given rect
@@ -101,16 +100,20 @@ int main( int argc, char** argv )
 			imshow(windowResult3, src_dep_temp);
 
 			//TODO: convert coordinates to world - using camera matrix
-			currPos.x = (rgbPos.x - MrgbArray[0][2]) * currPos.z / MrgbArray[0][0];
-			currPos.y = (rgbPos.y - MrgbArray[1][2]) * currPos.z / MrgbArray[1][1];
+			currPosWorld.x = (rgbPos.x - MrgbArray[0][2]) * currPosWorld.z / MrgbArray[0][0];
+			currPosWorld.y = (rgbPos.y - MrgbArray[1][2]) * currPosWorld.z / MrgbArray[1][1];
 
 			//DEBUG: currPos out
-			cout << currPos.x << " " << currPos.y << " " << currPos.z << endl;
+			cout << currPosWorld.x << " " << currPosWorld.y << " " << currPosWorld.z << endl;
 
-			/// estimate the next point - TODO: use world coordinates after conversion
+			/// estimate the next point
 			esti.addPoint(rgbPos);
 			nextError = esti.estimateNext(100, IMAGE_RECT, nextPositions);
 			nextPos = nextPositions.front();
+
+			estiWorld.addPoint(currPosWorld);
+			nextErrorWorld = estiWorld.estimateNext(25, Rect(), nextPositionsWorld);
+			nextPosWorld = nextPositionsWorld.front();
 
 			// will work only with world coordinates
 			//nextErrorAll = esti.estimateNextAll(nextPosAll);

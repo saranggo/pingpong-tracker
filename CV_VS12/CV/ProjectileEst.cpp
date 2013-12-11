@@ -213,8 +213,9 @@ public:
 			position = nextPoint;
 			velocity = velocity + acceleration;
 
-			if(nextPoint.x < limit.x || nextPoint.y < limit.y || nextPoint.x > (limit.x + limit.width) || nextPoint.y > (limit.y + limit.height))
-				break;
+			if(limit.x != 0 || limit.y != 0 || limit.width != 0 || limit.height != 0)
+				if(nextPoint.x < limit.x || nextPoint.y < limit.y || nextPoint.x > (limit.x + limit.width) || nextPoint.y > (limit.y + limit.height))
+					break;
 		}
 
 		return error;
